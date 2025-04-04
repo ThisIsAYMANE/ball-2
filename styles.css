@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css?family=Kameron:700');
+
+:root {
+  --primary: #414042;
+  --secondary: #adafb3;
+  --tertiary: #feebcb;
+  --shadow: 0 0 1px #633a26;
+}
+
+html, body {
+ box-sizing: border-box;
+ height: 100%;
+ margin: 0;
+ width: 100%;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+svg {
+ fill: rgb(255,252,255);
+ height: 30%;
+ left:25%;
+ overflow: visible;
+ position: absolute;
+ stroke: black;
+ top: 12%;
+ width: 50%;
+ z-index: 0;
+ will-change: transform;
+  
+ -webkit-tap-highlight-color: rgba(0,0,0,0);
+ -webkit-tap-highlight-color: transparent;
+}
+
+.stage {
+ background: var(--tertiary);
+ height: 100%;
+ overflow: hidden;
+ position: fixed;
+ width: 100%;
+ left: 0;
+ top: 0;
+ will-change: transform;
+}
+
+#bHoop {
+ stroke-width: 5;
+ z-index: 1;
+ position: absolute;
+}
+
+#basket {
+ z-index: 2;
+ position: absolute;
+}
+
+#basket #net {
+ fill: none;
+ stroke: #CCC;
+ stroke-miterlimit: 10;
+ stroke-width: 1;
+}
+
+#basket #ring {
+ fill: #df4931;
+ stroke: none;
+ z-index: 2;
+}
+
+#ball {
+ cursor: pointer;
+ fill: #df4931;
+ stroke: none;
+ z-index: 3;
+ position: absolute;
+}
+
+#ball .ballPath {
+ clip-path: url(#clip-path);
+}
+
+#ball .ballStripe {
+ fill: none;
+ stroke: #fff;
+ stroke-miterlimit: 10;
+}
+
+ul {
+ list-style-type: none;
+ padding: 0;
+ top: 0;
+}
+
+li {
+ display: inline-block;
+ width: 33%;
+}
+
+.copy {
+ background: var(--primary);
+ box-shadow: var(--shadow);
+ color: var(--secondary);
+ font-family: 'Kameron', serif;
+ font-size: 1rem;
+ left: 0;
+ margin: 0;
+ padding: 6px 0;
+ position: fixed;
+ text-align: center;
+ text-transform: uppercase;
+ width: 100%;
+}
+
+.instructions {
+ bottom: 0;
+ font-size: 1rem;
+}
+
+#bHoop .shadow {
+ fill: rgba(0,0,0,0.7);
+ stroke: none;
+ opacity: 0.6;
+}
+
+#goalText {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Kameron', serif;
+  font-size: 0px;
+  color: #df4931;
+  text-transform: uppercase;
+  font-weight: bold;
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  will-change: transform, opacity, font-size;
+}
