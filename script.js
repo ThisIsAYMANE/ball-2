@@ -4,8 +4,120 @@ On init
  Update the ball's initial position
 */
 
+// Global variables
+var timerInterval;
+var timeLeft = 30;
+var gameActive = false;
+
+// Timer functions
+function startTimer() {
+  // Clear any existing timer
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+  
+  // Reset time left
+  timeLeft = 60;
+  document.getElementById("timer").innerHTML = "Time: " + timeLeft;
+  
+  // Start new timer
+  timerInterval = setInterval(function() {
+    timeLeft--;
+    document.getElementById("timer").innerHTML = "Time: " + timeLeft;
+    
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      gameActive = false;
+      showTimeoutAnimation();
+    }
+  }, 1000);
+}
+
+function showTimeoutAnimation() {
+  // Kill any existing animations
+  TweenMax.killTweensOf("#goalText");
+  
+  // Reset goal text
+  TweenMax.set("#goalText", {
+    clearProps: "all",
+    fontSize: "0px",
+    opacity: 0,
+    scale: 1,
+    rotation: 0
+  });
+  
+  // Change text to "TIME OUT!"
+  document.getElementById("goalText").innerHTML = "TIME OUT!";
+  
+  // Show timeout text
+  TweenMax.to("#goalText", 0.5, {
+    fontSize: "150px",
+    opacity: 1,
+    ease: Back.easeOut
+  });
+  
+  // Hide timeout text and return to start screen
+  TweenMax.to("#goalText", 0.5, {
+    fontSize: "0px",
+    opacity: 0,
+    ease: Power1.easeIn,
+    delay: 1,
+    onComplete: function() {
+      // Hide game elements
+      TweenMax.to(".stage", 0.5, {autoAlpha: 0});
+      TweenMax.to(".copy", 0.5, {autoAlpha: 0});
+      
+      // Show start screen
+      document.getElementById("startScreen").style.display = "flex";
+      TweenMax.to("#startScreen", 0.5, {autoAlpha: 1});
+      
+      // Reset game state
+      score = 0;
+      shots = 0;
+      hits = 0;
+      timeLeft = 60;
+      gameActive = false;
+      
+      // Update displays
+      document.getElementById("score").innerHTML = "Score: " + score;
+      document.getElementById("hits").innerHTML = "Hits: " + hits;
+      document.getElementById("timer").innerHTML = "Time: " + timeLeft;
+    }
+  });
+}
+
 // wait until DOM is ready
 document.addEventListener("DOMContentLoaded", function(event) {
+    // Hide game elements initially
+    TweenMax.set(".stage", {autoAlpha: 0});
+    TweenMax.set(".copy", {autoAlpha: 0});
+    TweenMax.set("#goalText", {autoAlpha: 0});
+
+    // Add start button click handler
+    document.getElementById("startButton").addEventListener("click", function() {
+        // Hide start screen
+        TweenMax.to("#startScreen", 0.5, {
+            autoAlpha: 0,
+            onComplete: function() {
+                document.getElementById("startScreen").style.display = "none";
+            }
+        });
+
+        // Show game elements
+        TweenMax.to(".stage", 1, {autoAlpha: 1});
+        TweenMax.to(".copy", 0.5, {autoAlpha: 1});
+        
+        // Reset game state
+        score = 0;
+        shots = 0;
+        hits = 0;
+        gameActive = true;
+        document.getElementById("score").innerHTML = "Score: " + score;
+        document.getElementById("hits").innerHTML = "Hits: " + hits;
+        
+        // Start the timer
+        startTimer();
+    });
 
     // wait until window, stylesheets, images, links, and other media assets are loaded
     window.onload = function() {
@@ -135,10 +247,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
      var shots = 0,
          hits = 0,
          score = 0,
-         accuracy = 0,
-         timeLeft = 60,
-         timerInterval,
-         gameActive = true;
+         accuracy = 0;
    
      
      
@@ -301,23 +410,57 @@ document.addEventListener("DOMContentLoaded", function(event) {
       
       e.preventDefault();
    
-      // Get the current position of the ball
-      var ballRect = ball.getBoundingClientRect();
-      var currentX = ballRect.left + ballRadius/2;
-      var currentY = ballRect.top + ballRadius/2;
-   
-      // Create particle at the current ball position
-      p = Particle.create(
-        currentX,
-        currentY,
-        0,
-        0,
-        0.2  // Reduced gravity effect
-      );
+      // Create a new basketball
+      var newBall = document.createElement("div");
+      newBall.className = "basketball";
       
+      // Copy the SVG content from the original ball
+      newBall.innerHTML = ball.innerHTML;
+      
+      // Position the new ball at click position
+      document.querySelector(".stage").appendChild(newBall);
+      
+      // Style the new ball
+      TweenMax.set(newBall, {
+          position: "absolute",
+          width: ballRadius + "px",
+          height: ballRadius + "px",
+          x: getMouse(e).x - ballRadius/2,
+          y: getMouse(e).y - ballRadius/2,
+          scale: 0.5,  // Start smaller
+          autoAlpha: 0  // Start transparent
+      });
+      
+      // Animate the new ball appearing
+      TweenMax.to(newBall, 0.3, {
+          scale: 1,
+          autoAlpha: 1,
+          ease: Back.easeOut,
+          onComplete: function() {
+              // Fade out and remove after a short time
+              TweenMax.to(newBall, 0.5, {
+                  y: "+=100",
+                  autoAlpha: 0,
+                  ease: Power1.easeIn,
+                  delay: 0.5,
+                  onComplete: function() {
+                      newBall.parentNode.removeChild(newBall);
+                  }
+              });
+          }
+      });
+
+      // Original ball handling code
+      p = Particle.create(
+          ball.getBoundingClientRect().left + ballRadius/2,
+          ball.getBoundingClientRect().top + ballRadius/2,
+          0,
+          0,
+          0.2
+      );
       force = Vector.create(0,0);
       start = Vector.create(getMouse(e).x, getMouse(e).y-offsetY);
-   
+
       document.addEventListener("mousemove", moveBall);
       document.addEventListener("touchmove", moveBall);
      };
@@ -461,56 +604,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
       document.getElementById("hits").innerHTML = "Score: " + score;
       document.getElementById("accuracy").innerHTML = "Accuracy: " + Math.round(accuracy * 100) + "%"
      }
-   
-     // Add timer function
-     function startTimer() {
-       timerInterval = setInterval(function() {
-         timeLeft--;
-         document.getElementById("timer").innerHTML = "Time: " + timeLeft;
-         
-         if (timeLeft <= 0) {
-           clearInterval(timerInterval);
-           gameActive = false;
-           showTimeoutAnimation();
-         }
-       }, 1000);
-     }
-   
-     // Add timeout animation function
-     function showTimeoutAnimation() {
-       // Kill any existing animations
-       TweenMax.killTweensOf("#goalText");
-       
-       // Reset goal text
-       TweenMax.set("#goalText", {
-         clearProps: "all",
-         fontSize: "0px",
-         opacity: 0,
-         scale: 1,
-         rotation: 0
-       });
-       
-       // Change text to "TIME OUT!"
-       document.getElementById("goalText").innerHTML = "TIME OUT!";
-       
-       // Show timeout text
-       TweenMax.to("#goalText", 0.5, {
-         fontSize: "150px",
-         opacity: 1,
-         ease: Back.easeOut
-       });
-       
-       // Hide timeout text
-       TweenMax.to("#goalText", 0.5, {
-         fontSize: "0px",
-         opacity: 0,
-         ease: Power1.easeIn,
-         delay: 1
-       });
-     }
-   
-     // Start the timer when the game begins
-     startTimer();
    
      function showGoalAnimation() {
        // Kill any existing animations
