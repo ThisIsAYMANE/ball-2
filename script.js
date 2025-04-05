@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
       basketWidth = Math.round(basket.querySelector("rect").getBoundingClientRect().width);
    
       // Work out how the ratio between the basket's width and the ball's radius, make it a tiny smaller just for safety
-      ratio = basketWidth / ballRadius - 0.3;
+      ratio = basketWidth / ballRadius - 0.2;
    
       w = window.innerWidth;
       h = window.innerHeight;
@@ -301,13 +301,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
       
       e.preventDefault();
    
+      // Get the current position of the ball
+      var ballRect = ball.getBoundingClientRect();
+      var currentX = ballRect.left + ballRadius/2;
+      var currentY = ballRect.top + ballRadius/2;
+   
+      // Create particle at the current ball position
       p = Particle.create(
-        ball.getBoundingClientRect().left + ballRadius/2,
-        ball.getBoundingClientRect().top + ballRadius/2,
+        currentX,
+        currentY,
         0,
         0,
         0.2  // Reduced gravity effect
       );
+      
       force = Vector.create(0,0);
       start = Vector.create(getMouse(e).x, getMouse(e).y-offsetY);
    
@@ -382,11 +389,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
       hasThrown = false;
       highEnough = false;
    
-      // Reset ball position and rotation
+      // Reset ball position and rotation with a fixed scale
       TweenMax.to(ball, 1, {
         x: 0,
         y: offsetY,
-        scale: ratio,
+        scale: 1,  // Set to 1 instead of ratio to maintain original size
         rotation: 0,
         ease: Power3.easeOut,
         onComplete: function() {
