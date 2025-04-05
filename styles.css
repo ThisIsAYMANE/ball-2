@@ -44,17 +44,21 @@ svg {
   left: 0;
   top: 0;
   will-change: transform;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 #bHoop {
  stroke-width: 5;
  z-index: 1;
  position: absolute;
+ transform: translateZ(-500px);
 }
 
 #basket {
  z-index: 2;
  position: absolute;
+ transform: translateZ(-500px);
 }
 
 #basket #net {
@@ -76,6 +80,7 @@ svg {
  stroke: none;
  z-index: 3;
  position: absolute;
+ transform-style: preserve-3d;
 }
 
 #ball .ballPath {

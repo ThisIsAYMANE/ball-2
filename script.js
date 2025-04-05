@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
       basketWidth = Math.round(basket.querySelector("rect").getBoundingClientRect().width);
    
       // Work out how the ratio between the basket's width and the ball's radius, make it a tiny smaller just for safety
-      ratio = basketWidth / ballRadius - 0.1;
+      ratio = basketWidth / ballRadius - 0.3;
    
       w = window.innerWidth;
       h = window.innerHeight;
@@ -230,54 +230,55 @@ document.addEventListener("DOMContentLoaded", function(event) {
           if(lastY < currY && force.getLength() > 15) {
    
             // Has it hit the basket
-            if(currY < 10 && currY > -10) {
+            if(currY < 15 && currY > -15) {
               hasThrown = false;
-   
-              // Was it on target?
-              if(currX > basketWidth*0.1 && currX < basketWidth || currX < -basketWidth*0.1 && currX > -basketWidth) {
-   
-                // Create an oposite force angled in relation to the basket
-                force.setX(currX/10);
-                force.setLength(force.getLength()*0.7);
-                p.velocity = force;
-               } else if(currX <= basketWidth && currX >= -basketWidth && gameActive) {
-                 // Yes
-                 score += 2;
-                 hits += 1;
-                 
-                 // Show goal animation
-                 showGoalAnimation();
-                 
-                 // Special animation for 7 points
-                 if (score === 7) {
-                   TweenMax.killTweensOf("#basket");
-                   
-                   TweenMax.to("#basket", 0.5, {
-                     scale: 1.2,
-                     rotation: 10,
-                     ease: Elastic.easeOut
-                   });
-                   
-                   TweenMax.to("#basket", 0.5, {
-                     scale: 1,
-                     rotation: 0,
-                     ease: Power1.easeIn,
-                     delay: 0.5
-                   });
-                 }
+
+              // Was it on target? - Adjusted for perspective
+              if(currX > basketWidth*0.1 && currX < basketWidth*1.1 || currX < -basketWidth*0.1 && currX > -basketWidth*1.1) {
+                // Instead of bouncing, let the ball continue its path
+                p.velocity.setLength(p.velocity.getLength() * 0.8);
+                p.velocity.setX(p.velocity.getX() * 0.8);
+              } else if(currX <= basketWidth*1.1 && currX >= -basketWidth*1.1 && gameActive) {
+                // Yes - Score!
+                score += 2;
+                hits += 1;
                 
+                // Show goal animation
+                showGoalAnimation();
+                
+                // Special animation for 7 points
+                if (score === 7) {
+                  TweenMax.killTweensOf("#basket");
+                  
+                  TweenMax.to("#basket", 0.5, {
+                    scale: 1.2,
+                    rotation: 10,
+                    ease: Elastic.easeOut
+                  });
+                  
+                  TweenMax.to("#basket", 0.5, {
+                    scale: 1,
+                    rotation: 0,
+                    ease: Power1.easeIn,
+                    delay: 0.5
+                  });
+                }
+               
                 // Three pointer?
                 if(force.getX() > 2 || force.getX() < -2) {
                  score += 1;
                 }
                 
+                // Update score display
+                document.getElementById("score").innerHTML = "Score: " + score;
+                document.getElementById("hits").innerHTML = "Hits: " + hits;
                 
                 TweenMax.to("#net", 1, {scaleY:1.1, transformOrigin:"50% 0", ease:Elastic.easeOut});
                 TweenMax.to("#net", 0.3, {scale:1, transformOrigin:"50% 0", ease:Power2.easeInOut, delay:0.6});
-               }
-             }
-           }
-         }
+              }
+            }
+          }
+        }
       }
    
       p.update();
@@ -300,7 +301,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
       
       e.preventDefault();
    
-      p = Particle.create(0, offsetY, 0, 0, 0);
+      p = Particle.create(
+        ball.getBoundingClientRect().left + ballRadius/2,
+        ball.getBoundingClientRect().top + ballRadius/2,
+        0,
+        0,
+        0.2  // Reduced gravity effect
+      );
       force = Vector.create(0,0);
       start = Vector.create(getMouse(e).x, getMouse(e).y-offsetY);
    
@@ -497,6 +504,35 @@ document.addEventListener("DOMContentLoaded", function(event) {
    
      // Start the timer when the game begins
      startTimer();
+   
+     function showGoalAnimation() {
+       // Kill any existing animations
+       TweenMax.killTweensOf("#goalText");
+       
+       // Reset goal text
+       TweenMax.set("#goalText", {
+         clearProps: "all",
+         fontSize: "0px",
+         opacity: 0,
+         scale: 1,
+         rotation: 0
+       });
+       
+       // Show goal text
+       TweenMax.to("#goalText", 0.5, {
+         fontSize: "150px",
+         opacity: 1,
+         ease: Back.easeOut
+       });
+       
+       // Hide goal text
+       TweenMax.to("#goalText", 0.5, {
+         fontSize: "0px",
+         opacity: 0,
+         ease: Power1.easeIn,
+         delay: 1
+       });
+     }
     };
    });
    
