@@ -135,7 +135,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
      var shots = 0,
          hits = 0,
          score = 0,
-         accuracy = 0;
+         accuracy = 0,
+         timeLeft = 60,
+         timerInterval,
+         gameActive = true;
    
      
      
@@ -237,44 +240,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 force.setX(currX/10);
                 force.setLength(force.getLength()*0.7);
                 p.velocity = force;
-               } else if(currX <= basketWidth && currX >= -basketWidth) {
+               } else if(currX <= basketWidth && currX >= -basketWidth && gameActive) {
                  // Yes
                  score += 2;
                  hits += 1;
                  
-                 // Simple goal animation
-                 TweenMax.to("#goalText", 0.3, {
-                   fontSize: "200px",
-                   opacity: 1,
-                   scale: 1,
-                   ease: Back.easeOut
-                 });
+                 // Show goal animation
+                 showGoalAnimation();
                  
-                 TweenMax.to("#goalText", 0.3, {
-                   fontSize: "0px",
-                   opacity: 0,
-                   scale: 0,
-                   ease: Power1.easeIn,
-                   delay: 1
-                 });
-
                  // Special animation for 7 points
                  if (score === 7) {
-                   // Create a celebration animation
-                   TweenMax.to("#goalText", 0.5, {
-                     scale: 2,
-                     rotation: 360,
-                     ease: Back.easeOut
-                   });
+                   TweenMax.killTweensOf("#basket");
                    
-                   TweenMax.to("#goalText", 0.5, {
-                     scale: 1,
-                     rotation: 0,
-                     ease: Power1.easeIn,
-                     delay: 1
-                   });
-                   
-                   // Add a special effect to the basket
                    TweenMax.to("#basket", 0.5, {
                      scale: 1.2,
                      rotation: 10,
@@ -358,19 +335,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
       document.removeEventListener("touchmove", moveBall);
       // Reset the mouse tracking defaults
       timestamp = null;
-      lastMouseX = null;
-      lastMouseY = null;
+      lastMouse = null;
    
       hasThrown = true;
    
       shots += 1;
    
-      scale.play(0)
+      scale.play(0);
    
-      // Limit how hard the ball can be thrown. Improves user accuracy diminishes realistic movement
+      // Limit how hard the ball can be thrown
       if(force.getLength() > 30) force.setLength(30);
       p.velocity = force;
-      p.gravity = Vector.create(0,0.8);
+      p.gravity = Vector.create(0, 0.8);
       
       if(force.getX() > 0) {
        rot = "-=4";
@@ -378,11 +354,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
        rot = "+=4";
       }
    
-      //  Start GSAP's tick so more physics-like movement can take place
+      // Start physics ticker
       TweenMax.ticker.addEventListener("tick", tick);
    
-      // Stop it after some period of time - saves having to write edges and floor logic and the user can shoot every three seconds or so
-      TweenMax.delayedCall(2, reset);
+      // Reset after 3 seconds or when the ball goes out of bounds
+      TweenMax.delayedCall(3, reset);
    
      };
    
@@ -391,26 +367,30 @@ document.addEventListener("DOMContentLoaded", function(event) {
      
      function reset() {
    
+      // Stop the physics ticker
       TweenMax.ticker.removeEventListener("tick", tick);
    
-      p.gravity = 0;
-   
+      // Reset physics variables
+      p.gravity = Vector.create(0, 0);
       hasThrown = false;
       highEnough = false;
    
-      ball.addEventListener("mousedown", grabBall);
-      ball.addEventListener("touchstart", grabBall);
-   
-      updateScore();
-   
-   
+      // Reset ball position and rotation
       TweenMax.to(ball, 1, {
-       x:0,
-       y:offsetY,
-       scale:1,
-       rotation:0,
-       ease:Power3.easeOut
+        x: 0,
+        y: offsetY,
+        scale: ratio,
+        rotation: 0,
+        ease: Power3.easeOut,
+        onComplete: function() {
+          // Re-enable ball interaction after reset
+          ball.addEventListener("mousedown", grabBall);
+          ball.addEventListener("touchstart", grabBall);
+        }
       });
+   
+      // Update score display
+      updateScore();
    
      };
    
@@ -467,6 +447,56 @@ document.addEventListener("DOMContentLoaded", function(event) {
       document.getElementById("hits").innerHTML = "Score: " + score;
       document.getElementById("accuracy").innerHTML = "Accuracy: " + Math.round(accuracy * 100) + "%"
      }
+   
+     // Add timer function
+     function startTimer() {
+       timerInterval = setInterval(function() {
+         timeLeft--;
+         document.getElementById("timer").innerHTML = "Time: " + timeLeft;
+         
+         if (timeLeft <= 0) {
+           clearInterval(timerInterval);
+           gameActive = false;
+           showTimeoutAnimation();
+         }
+       }, 1000);
+     }
+   
+     // Add timeout animation function
+     function showTimeoutAnimation() {
+       // Kill any existing animations
+       TweenMax.killTweensOf("#goalText");
+       
+       // Reset goal text
+       TweenMax.set("#goalText", {
+         clearProps: "all",
+         fontSize: "0px",
+         opacity: 0,
+         scale: 1,
+         rotation: 0
+       });
+       
+       // Change text to "TIME OUT!"
+       document.getElementById("goalText").innerHTML = "TIME OUT!";
+       
+       // Show timeout text
+       TweenMax.to("#goalText", 0.5, {
+         fontSize: "150px",
+         opacity: 1,
+         ease: Back.easeOut
+       });
+       
+       // Hide timeout text
+       TweenMax.to("#goalText", 0.5, {
+         fontSize: "0px",
+         opacity: 0,
+         ease: Power1.easeIn,
+         delay: 1
+       });
+     }
+   
+     // Start the timer when the game begins
+     startTimer();
     };
    });
    

@@ -35,14 +35,15 @@ svg {
 }
 
 .stage {
- background: var(--tertiary);
- height: 100%;
- overflow: hidden;
- position: fixed;
- width: 100%;
- left: 0;
- top: 0;
- will-change: transform;
+  background: url('../assets/bg_basketball.png') no-repeat center center;
+  background-size: cover;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  left: 0;
+  top: 0;
+  will-change: transform;
 }
 
 #bHoop {
@@ -121,7 +122,7 @@ li {
 #bHoop .shadow {
  fill: rgba(0,0,0,0.7);
  stroke: none;
- opacity: 0.6;
+ opacity: 0;
 }
 
 #goalText {
